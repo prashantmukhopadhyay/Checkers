@@ -9,7 +9,7 @@ class Board
   def perform_moves
   end
 
-  protected
+  # protected
 
   # def [](pos)
   #    puts "regular [[pos]] called"
@@ -17,7 +17,7 @@ class Board
   # end
 
   def [](*pos)
-    puts "splat [*pos] called"
+    # puts "splat [*pos] called"
     @tiles[pos[0]][pos[1]]
   end
 
@@ -78,17 +78,48 @@ class Piece
     dirs_indices = ( color == :white ? [0, 1] : [2, 3] )
     @dirs = [].tap do |dir|
       dirs_indices.each do |idx|
-        dir << [[1,1],[1,-1],[-1,1],[-1,-1]][idx]
+        dir << [[-1,1],[-1,-1],[1,1],[1,-1]][idx]
+      end
+    end
+    @promoted = false
+  end
+
+  def slide_moves(board)
+    pieces = board.tiles.flatten.compact
+
+    [].tap do |sliding_moves|
+      @dirs.each do |dir|
+        *tpos = pos[0] + dir[0], pos[1] + dir[1]
+        sliding_moves << [tpos[0], tpos[1]] unless board[*tpos].is_a?(Piece)
       end
     end
   end
 
-  def slide_moves(board)
-    adjacent = check_adjacent(board)
-  end
+  # def adjacent_pieces(board)
+  #   pieces = board.tiles.flatten.compact
+  #
+  #   diag_piece_positions.each do |diag_pos|
+  #     diag_pieces = pieces.select { |piece| piece.pos == diag_pos }
+  #   end
+  #
+  #   if promoted?
+  #     str_piece_positions.each do |str_pos|
+  #       str_pieces = pieces.select { |piece| piece.pos == str_pos }
+  #     end
+  #   else
+  #     str_pieces = []
+  #   end
+  #
+  #   diag_pieces + str_pieces
+  # end
 
-  def jump_moves
-  end
+  # def promoted?
+  #   @promoted
+  # end
+  #
+  # def jump_moves
+  #   can_kill = adjacent_pieces.select{ |piece| piece.color != self.color }
+  # end
 
   def perform_slide
   end
@@ -105,4 +136,9 @@ end
 # p Piece.new(:white, 2, 3).color
 # p Piece.new(:white, 2, 3).dirs
 
-Board.new(true).arg_chk
+b = Board.new(true)
+p b[5,2].slide_moves(b)
+p b[6,1].slide_moves(b)
+p b[2,1].slide_moves(b)
+p b[0,1].slide_moves(b)
+
