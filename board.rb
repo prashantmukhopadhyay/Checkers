@@ -22,7 +22,8 @@ class Board
     @tiles[pos[0]][pos[1]] = val
   end
 
-  def move_to(from, to)
+  #REV: now that you have the [] methods u can just pass in an an array for from and too[x,y]
+  def move_to(from, to) 
     self[to[0], to[1]] = self[from[0], from[1]]
     self[from[0], from[1]] = nil
   end
@@ -34,7 +35,7 @@ class Board
     end
   end
 
-  def place_pieces
+  def place_pieces #REV clever implementation
     #set white and black pieces on board
     (0..7).each do |row|
       @tiles.at(row).each_index do |idx|
@@ -45,7 +46,7 @@ class Board
     end
   end
 
-  def dupleganger
+  def dupleganger #REV < -- lol
     #double dup for board and pieces
     duped_tiles = @tiles.collect do |el|
       if el.is_a?(Array)
@@ -74,7 +75,7 @@ class Board
       jumped[idx] = from[idx] + (to[idx] - from[idx]) / 2
     end
 
-    self[jumped[0], jumped[1]] = nil
+    self[jumped[0], jumped[1]] = nil #use the []= method u made to pass in [x,y]
   end
 
 end
@@ -84,8 +85,8 @@ class Piece
 
   attr_reader :color, :pos, :char, :dirs
 
-  def initialize(color, *pos)
-    @color = color
+  def initialize(color, *pos) #pass in an [x,y] array instead of splat
+    @color = color #use parallell assignment here
     @pos = pos
     @char = ( color == :white ? "\u26AA" : "\u26AB" )
     dirs_indices = ( color == :white ? [0, 1] : [2, 3] )
@@ -97,7 +98,7 @@ class Piece
     @promoted = false
   end
 
-  def is_bound?(*pos)
+  def is_bound?(*pos) #REV  use array [x,y]
     x, y = pos[0], pos[1]
     return x.between?(0,7) && y.between?(0,7)
   end
@@ -114,7 +115,7 @@ class Piece
     end
   end
 
-  def jump_moves(board)
+  def jump_moves(board) #REV why variable names with splat?
     pieces = board.tiles.flatten.compact
 
     [].tap do |jump_moves|
@@ -130,7 +131,8 @@ class Piece
     end
   end
 
-  def perform_slide(board, from, to)
+#REV refactor for readability (what is condt?)
+  def perform_slide(board, from, to) 
     condt = !slide_moves(board).include?(to) || board[from[0], from[1]] != self
     raise InvalidMoveError if condt
     @pos = to
@@ -151,8 +153,9 @@ class Piece
     perform_moves!(board.dupleganger, move_sequence)
     true
   end
-
-  def perform_moves!(board, move_sequence)
+  
+  #REV you need to make sure the player cant make multiple slides in one turn
+  def perform_moves!(board, move_sequence) 
     move_sequence.each do |move|
       case move_type(move)
       when 'slide'
