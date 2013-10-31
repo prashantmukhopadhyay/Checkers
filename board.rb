@@ -69,6 +69,8 @@ class Board
 end
 
 class Piece
+  DIRS = [[-1,1],[-1,-1],[1,1],[1,-1]]
+
   attr_reader :color, :pos, :char #:dirs
 
   def initialize(color, *pos)
@@ -76,9 +78,9 @@ class Piece
     @pos = pos
     @char = ( color == :white ? "\u26AA" : "\u26AB" )
     dirs_indices = ( color == :white ? [0, 1] : [2, 3] )
-    @dirs = [].tap do |dir|
+    @dirs = [].tap do |directions|
       dirs_indices.each do |idx|
-        dir << [[-1,1],[-1,-1],[1,1],[1,-1]][idx]
+        directions << DIRS[idx]
       end
     end
     @promoted = false
@@ -93,6 +95,23 @@ class Piece
         sliding_moves << [tpos[0], tpos[1]] unless board[*tpos].is_a?(Piece)
       end
     end
+  end
+
+
+
+  # if color == :white
+  #   @promoted = ( pos[0] == 0 ? true : false )
+  # else
+  #   @promoted = ( pos[0] == 7 ? true : false )
+  # end
+
+  def promoted?
+    @promoted
+  end
+
+  def promote
+    @promoted = true
+    @dirs =
   end
 
   # def adjacent_pieces(board)
@@ -113,9 +132,7 @@ class Piece
   #   diag_pieces + str_pieces
   # end
 
-  # def promoted?
-  #   @promoted
-  # end
+  #
   #
   # def jump_moves
   #   can_kill = adjacent_pieces.select{ |piece| piece.color != self.color }
@@ -137,8 +154,8 @@ end
 # p Piece.new(:white, 2, 3).dirs
 
 b = Board.new(true)
-p b[5,2].slide_moves(b)
-p b[6,1].slide_moves(b)
-p b[2,1].slide_moves(b)
-p b[0,1].slide_moves(b)
+# p b[5,2].slide_moves(b)
+# p b[6,1].slide_moves(b)
+# p b[2,1].slide_moves(b)
+# p b[0,1].slide_moves(b)
 
