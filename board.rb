@@ -3,7 +3,7 @@ class Board
 
   def initialize(fill_board = true)
     fill_tiles(true)
-    # display
+    display
   end
 
   def perform_moves
@@ -22,13 +22,13 @@ class Board
   def place_pieces
     #set white and black pieces on board
     (0..7).each do |row|
-      @tiles.at(row).each_with_index do |tile, idx|
-        # p "row #{row} + col #{idx} % 2 == chk #{col_chk = ( (row + idx) % 2 == 1 )} "
+      @tiles.at(row).each_index do |idx|
+        p "row #{row} + col #{idx} % 2 == chk #{col_chk = ( (row + idx) % 2 == 1 )} "
         col_chk = ( (row + idx) % 2 == 1 )
-        tile = Piece.new(:black, row, idx) if row.between?(0,2) && col_chk
-        tile = Piece.new(:white, row, idx) if row.between?(5,7) && col_chk
+        @tiles[row][idx] = Piece.new(:black, row, idx) if row.between?(0,2) && col_chk
+        @tiles[row][idx] = Piece.new(:white, row, idx) if row.between?(5,7) && col_chk
       end
-      # puts
+      puts
     end
   end
 
@@ -47,9 +47,8 @@ class Board
 
   def display
     @tiles.each do |row|
-      p row
       row.each do |tile|
-        print (!tile.nil? ? tile.char + " " : "  ")
+        print (!tile.nil? ? tile.char : "").rjust(2)
       end
       puts
     end
