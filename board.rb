@@ -1,12 +1,9 @@
 class Board
   attr_reader :tiles
 
-  def initialize(fill_board = true)
-    fill_tiles(fill_board)
-    display
-  end
-
-  def perform_moves
+  def initialize(to_fill, tiles = Array.new(8) { Array.new(8) } )
+    @tiles = tiles
+    fill_tiles(to_fill)
   end
 
   # protected
@@ -26,16 +23,15 @@ class Board
   end
 
   def move_to(from, to)
-    board[to[0], to[1]] = board[from[0], from[1]]
-    board[from[0], from[1]] = nil
+    self[to[0], to[1]] = self[from[0], from[1]]
+    self[from[0], from[1]] = nil
   end
 
-  def valid_move_sequence?
-  end
-
-  def fill_tiles(fill)
-    @tiles = Array.new(8) { Array.new(8) }
-    place_pieces if fill
+  def fill_tiles(to_fill)
+    if to_fill
+      place_pieces
+      display
+    end
   end
 
   def place_pieces
@@ -51,15 +47,16 @@ class Board
 
   def dupleganger
     #double dup for board and pieces
-    @tiles.map do |e|
-      if e.is_a?(Array)
-        e.dupleganger
-      elsif e.is_a?(Piece)
-        e.dup
+    duped_tiles = @tiles.collect do |el|
+      if el.is_a?(Array)
+        el.dup
+      elsif el.is_a?(Piece)
+        el.dup
       else
         nil
       end
     end
+    Board.new(false, duped_tiles)
   end
 
   def display
@@ -69,6 +66,15 @@ class Board
       end
       puts
     end
+  end
+
+  def remove_jumped_piece(from, to)
+    jumped = []
+    (0..1).each do |idx|
+      jumped[idx] = from[idx] + (to[idx] - from[idx]) / 2
+    end
+
+    self[jumped[0], jumped[1]] = nil
   end
 
 end
@@ -91,15 +97,80 @@ class Piece
     @promoted = false
   end
 
+  def is_bound?(*pos)
+    x, y = pos[0], pos[1]
+    return x.between?(0,7) && y.between?(0,7)
+  end
+
   def slide_moves(board)
     pieces = board.tiles.flatten.compact
 
     [].tap do |sliding_moves|
       @dirs.each do |dir|
         *tpos = pos[0] + dir[0], pos[1] + dir[1]
-        sliding_moves << [tpos[0], tpos[1]] unless board[*tpos].is_a?(Piece)
+        condt = !board[*tpos].is_a?(Piece) && is_bound?(*tpos)
+        sliding_moves << [tpos[0], tpos[1]] if condt
       end
     end
+  end
+
+  def jump_moves(board)
+    pieces = board.tiles.flatten.compact
+
+    [].tap do |jump_moves|
+      @dirs.each do |dir|
+        *mid_pos = pos[0] + dir[0], pos[1] + dir[1]
+        *end_pos = pos[0] + (2 * dir[0]), pos[1] + (2 * dir[1])
+
+        if !board[*mid_pos].nil? && board[*end_pos].nil? && is_bound?(*end_pos)
+          row, col = end_pos[0], end_pos[1]
+          jump_moves << [row, col] if board[*mid_pos].color != self.color
+        end
+      end
+    end
+  end
+
+  def perform_slide(board, from, to)
+    condt = !slide_moves(board).include?(to) || board[from[0], from[1]] != self
+    raise InvalidMoveError if condt
+    @pos = to
+    board.move_to(from, to)
+  end
+
+  def perform_jump(board, from, to)
+    condt = !jump_moves(board).include?(to) || board[from[0], from[1]] != self
+    raise InvalidMoveError if condt
+    @pos = to
+    board.move_to(from, to)
+    board.remove_jumped_piece(from, to)
+  end
+
+
+  def valid_move_sequence?(board, move_sequence)
+    # p board.dupleganger == board
+    perform_moves!(board.dupleganger, move_sequence)
+    true
+  end
+
+  def perform_moves!(board, move_sequence)
+    move_sequence.each do |move|
+      case move_type(move)
+      when 'slide'
+        perform_slide(board, pos, move)
+      when 'jump'
+        perform_jump(board, pos, move)
+      when nil
+        raise InvalidMoveError
+      end
+    end
+  end
+
+  def perform_moves
+  end
+
+  def move_type(move)
+    return nil if move.nil?
+    (pos[0] - move[0]).abs == 1 ? 'slide' : 'jump'
   end
 
   def can_promote?
@@ -116,56 +187,25 @@ class Piece
     @dirs = DIRS
   end
 
-  def jump_moves(board)
-    pieces = board.tiles.flatten.compact
-
-    [].tap do |jump_moves|
-      @dirs.each do |dir|
-        *mid_pos = pos[0] + dir[0], pos[1] + dir[1]
-        *end_pos = pos[0] + (2 * dir[0]), pos[1] + (2 * dir[1])
-
-        if !board[*mid_pos].nil? && board[*end_pos].nil?
-          row, col = end_pos[0], end_pos[1]
-          jump_moves << [row, col] if board[*mid_pos].color != self.color
-        end
-      end
-    end
-  end
-
-  def perform_slide(board, from, to)
-    pos = to
-    board.move_to(from, to)
-  end
-
-  def perform_jump(board, from, to)
-    pos = to
-    board.move_to(from, to)
-  end
-
-  def perform_moves!
-  end
-
 end
 
-# p Piece.new(:white, 2, 3).pos
-# p Piece.new(:white, 2, 3).color
-# p Piece.new(:white, 2, 3).dirs
-
 b = Board.new(false)
-# p b[5,2].slide_moves(b)
-# p b[6,1].slide_moves(b)
-# p b[2,1].slide_moves(b)
-# p b[0,1].slide_moves(b)
+#
+p1 = b[4,3] = Piece.new(:white, 4, 3)
+# p2 = b[2,1] = Piece.new(:black, 2, 1)
+# p3 = b[1,2] = Piece.new(:black, 1, 2)
+p4 = b[2,3] = Piece.new(:black, 2, 3)
 
-p1 = b[2,1] = Piece.new(:white, 0, 1)
-p1.promote if p1.can_promote?
-p p1.dirs
-p p1.promoted?
-# b[2,3] = Piece.new(:white, 2, 1)
-# b[1,2] = Piece.new(:black, 1, 2)
+b.display
+p p4.valid_move_sequence?(b, [[3,4], [5,2], [6,1]])
 # b.display
-# b[2,1].jump_moves(b)
-# p b[1,2].jump_moves(b)
-# p b[2,1].slide_moves(b)
-# p b[1,2].slide_moves(b)
+p4.perform_moves!(b, [[3,4], [5,2], [6,1]])
+b.display
+# p p1.jump_moves(b)
+# p2.perform_jump(b, [2, 1], [0, 3])
+# p3.perform_jump(b, [1, 2], [3, 4])
+# p p4.jump_moves(b)
+# b.display
 
+class InvalidMoveError < ArgumentError
+end
