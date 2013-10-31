@@ -2,7 +2,7 @@ class Board
   attr_reader :tiles
 
   def initialize(fill_board = true)
-    fill_tiles(true)
+    fill_tiles(fill_board)
     display
   end
 
@@ -97,13 +97,10 @@ class Piece
     end
   end
 
-
-
-  # if color == :white
-  #   @promoted = ( pos[0] == 0 ? true : false )
-  # else
-  #   @promoted = ( pos[0] == 7 ? true : false )
-  # end
+  def can_promote?
+    row = pos[0]
+    color == :white ? ( row == 0 ? true : false ) : ( row == 7 ? true : false )
+  end
 
   def promoted?
     @promoted
@@ -111,7 +108,7 @@ class Piece
 
   def promote
     @promoted = true
-    @dirs =
+    @dirs = DIRS
   end
 
   # def adjacent_pieces(board)
@@ -132,11 +129,23 @@ class Piece
   #   diag_pieces + str_pieces
   # end
 
-  #
-  #
-  # def jump_moves
-  #   can_kill = adjacent_pieces.select{ |piece| piece.color != self.color }
-  # end
+  def jump_moves(board)
+    # can_kill = adjacent_pieces.select{ |piece| piece.color != self.color }
+
+    pieces = board.tiles.flatten.compact
+
+    [].tap do |jump_moves|
+      @dirs.each do |dir|
+        *mid_pos = pos[0] + dir[0], pos[1] + dir[1]
+        *end_pos = pos[0] + (2 * dir[0]), pos[1] + (2 * dir[1])
+
+        if !board[*mid_pos].nil? && board[*end_pos].nil?
+          row, col = end_pos[0], end_pos[1]
+          jump_moves << [row, col] if board[*mid_pos].color != self.color
+        end
+      end
+    end
+  end
 
   def perform_slide
   end
@@ -153,9 +162,18 @@ end
 # p Piece.new(:white, 2, 3).color
 # p Piece.new(:white, 2, 3).dirs
 
-b = Board.new(true)
+b = Board.new(false)
 # p b[5,2].slide_moves(b)
 # p b[6,1].slide_moves(b)
 # p b[2,1].slide_moves(b)
 # p b[0,1].slide_moves(b)
+
+b[2,1] = Piece.new(:white, 2, 1)
+b[2,3] = Piece.new(:white, 2, 1)
+b[1,2] = Piece.new(:black, 1, 2)
+b.display
+#p b[2,1].jump_moves(b)
+p b[1,2].jump_moves(b)
+# p b[2,1].slide_moves(b)
+# p b[1,2].slide_moves(b)
 
