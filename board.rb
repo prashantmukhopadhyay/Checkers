@@ -25,6 +25,11 @@ class Board
     @tiles[pos[0]][pos[1]] = val
   end
 
+  def move_to(from, to)
+    board[to[0], to[1]] = board[from[0], from[1]]
+    board[from[0], from[1]] = nil
+  end
+
   def valid_move_sequence?
   end
 
@@ -71,7 +76,7 @@ end
 class Piece
   DIRS = [[-1,1],[-1,-1],[1,1],[1,-1]]
 
-  attr_reader :color, :pos, :char #:dirs
+  attr_reader :color, :pos, :char, :dirs
 
   def initialize(color, *pos)
     @color = color
@@ -111,27 +116,7 @@ class Piece
     @dirs = DIRS
   end
 
-  # def adjacent_pieces(board)
-  #   pieces = board.tiles.flatten.compact
-  #
-  #   diag_piece_positions.each do |diag_pos|
-  #     diag_pieces = pieces.select { |piece| piece.pos == diag_pos }
-  #   end
-  #
-  #   if promoted?
-  #     str_piece_positions.each do |str_pos|
-  #       str_pieces = pieces.select { |piece| piece.pos == str_pos }
-  #     end
-  #   else
-  #     str_pieces = []
-  #   end
-  #
-  #   diag_pieces + str_pieces
-  # end
-
   def jump_moves(board)
-    # can_kill = adjacent_pieces.select{ |piece| piece.color != self.color }
-
     pieces = board.tiles.flatten.compact
 
     [].tap do |jump_moves|
@@ -147,10 +132,14 @@ class Piece
     end
   end
 
-  def perform_slide
+  def perform_slide(board, from, to)
+    pos = to
+    board.move_to(from, to)
   end
 
-  def perform_jump
+  def perform_jump(board, from, to)
+    pos = to
+    board.move_to(from, to)
   end
 
   def perform_moves!
@@ -168,12 +157,15 @@ b = Board.new(false)
 # p b[2,1].slide_moves(b)
 # p b[0,1].slide_moves(b)
 
-b[2,1] = Piece.new(:white, 2, 1)
-b[2,3] = Piece.new(:white, 2, 1)
-b[1,2] = Piece.new(:black, 1, 2)
-b.display
-#p b[2,1].jump_moves(b)
-p b[1,2].jump_moves(b)
+p1 = b[2,1] = Piece.new(:white, 0, 1)
+p1.promote if p1.can_promote?
+p p1.dirs
+p p1.promoted?
+# b[2,3] = Piece.new(:white, 2, 1)
+# b[1,2] = Piece.new(:black, 1, 2)
+# b.display
+# b[2,1].jump_moves(b)
+# p b[1,2].jump_moves(b)
 # p b[2,1].slide_moves(b)
 # p b[1,2].slide_moves(b)
 
