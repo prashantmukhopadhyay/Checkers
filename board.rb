@@ -11,6 +11,20 @@ class Board
 
   protected
 
+  # def [](pos)
+  #    puts "regular [[pos]] called"
+  #    self[pos[0],pos[1]] if pos.is_a?(Array)
+  # end
+
+  def [](*pos)
+    puts "splat [*pos] called"
+    @tiles[pos[0]][pos[1]]
+  end
+
+  def []=(*pos, val)
+    @tiles[pos[0]][pos[1]] = val
+  end
+
   def valid_move_sequence?
   end
 
@@ -23,12 +37,10 @@ class Board
     #set white and black pieces on board
     (0..7).each do |row|
       @tiles.at(row).each_index do |idx|
-        p "row #{row} + col #{idx} % 2 == chk #{col_chk = ( (row + idx) % 2 == 1 )} "
         col_chk = ( (row + idx) % 2 == 1 )
         @tiles[row][idx] = Piece.new(:black, row, idx) if row.between?(0,2) && col_chk
         @tiles[row][idx] = Piece.new(:white, row, idx) if row.between?(5,7) && col_chk
       end
-      puts
     end
   end
 
@@ -72,7 +84,7 @@ class Piece
   end
 
   def slide_moves(board)
-
+    adjacent = check_adjacent(board)
   end
 
   def jump_moves
@@ -93,4 +105,4 @@ end
 # p Piece.new(:white, 2, 3).color
 # p Piece.new(:white, 2, 3).dirs
 
-Board.new(true).tiles
+Board.new(true).arg_chk
