@@ -1,3 +1,5 @@
+#review - Tim Buckley
+
 class Board
   attr_reader :tiles
 
@@ -45,7 +47,7 @@ class Board
     end
   end
 
-  def dupleganger
+  def dupleganger #REV: I like this method name.
     #double dup for board and pieces
     duped_tiles = @tiles.collect do |el|
       if el.is_a?(Array)
@@ -62,6 +64,8 @@ class Board
   def display
     @tiles.each do |row|
       row.each do |tile|
+        #REV: I would reverse this to avoid the negative nil check.
+        #i.e. (title.nil? ? "" : tile.char)
         print (!tile.nil? ? tile.char : "").rjust(2)
       end
       puts
@@ -80,6 +84,7 @@ class Board
 end
 
 class Piece
+  #REV: I made the directions a constant, too, but a hash, so I can pull the appropriate directions later by calling the color as a key. For example DIRS[self.color], and the hash looks like {white: [blah blah], black: [blah blah]}. Your way needs fewer characters but is a little harder to read.
   DIRS = [[-1,1],[-1,-1],[1,1],[1,-1]]
 
   attr_reader :color, :pos, :char, :dirs
@@ -87,6 +92,7 @@ class Piece
   def initialize(color, *pos)
     @color = color
     @pos = pos
+    #REV: If you have "-*- coding: utf-8 -*-" at the top of the page, you can just paste in the symbols rather than the unicode. Helps know what the display will look like afterwards.
     @char = ( color == :white ? "\u26AA" : "\u26AB" )
     dirs_indices = ( color == :white ? [0, 1] : [2, 3] )
     @dirs = [].tap do |directions|
@@ -103,6 +109,7 @@ class Piece
   end
 
   def slide_moves(board)
+    #REV: the TA's had a "pieces" helper method in the chess solution that would help here.
     pieces = board.tiles.flatten.compact
 
     [].tap do |sliding_moves|
@@ -188,6 +195,8 @@ class Piece
   end
 
 end
+
+#REV: I think we're supposed to do most of this type of testing in pry.
 
 b = Board.new(false)
 #
